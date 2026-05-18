@@ -36,6 +36,7 @@ git clone <repo-url> ~/.claude/skills/icode
 
 | 命令 | 功能 | 创建目录 |
 |------|------|----------|
+| `/icode help` | 帮助：输出使用流程示例 | 否 |
 | `/icode new <需求>` | 全流程：创建目录 → 步骤1→6 | ✅ |
 | `/icode plan <需求>` | 仅步骤1：拟定项目计划 | ✅ |
 | `/icode review` | 仅步骤2：专项审查计划 | 否 |

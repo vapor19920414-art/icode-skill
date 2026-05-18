@@ -36,6 +36,7 @@ git clone <repo-url> ~/.claude/skills/icode
 
 | Command | Description | Creates Dir? |
 |---------|-------------|-------------|
+| `/icode help` | Help: show usage examples | No |
 | `/icode new <req>` | Full flow: create dir → steps 1–6 | Yes |
 | `/icode plan <req>` | Step 1 only: draft project plan | Yes |
 | `/icode review` | Step 2 only: review the plan | No |
