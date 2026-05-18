@@ -1,7 +1,9 @@
 ---
 name: icode
-description: 六步全流程编码工作流，支持分步手动调用：/icode new <需求> (新建+计划), /icode review (审查), /icode merge (定稿), /icode code (编码), /icode deepcheck (复检), /icode audit (终审)
+description: 六步全流程编码工作流，支持分步手动调用：/icode help (帮助), /icode new <需求> (新建+计划), /icode review (审查), /icode merge (定稿), /icode code (编码), /icode deepcheck (复检), /icode audit (终审)
 ---
+
+**版本**: v1.0.0
 
 # ICode 六步全流程编码工作流
 
@@ -15,6 +17,7 @@ description: 六步全流程编码工作流，支持分步手动调用：/icode 
 
 | 命令 | 功能 | 创建目录？ |
 |------|------|-----------|
+| `/icode help` | **帮助**：输出使用流程示例 | 否 |
 | `/icode new <需求>` | **全流程**：创建新目录 → 步骤1（拟定计划） | ✅ 创建新目录 |
 | `/icode plan <需求>` | **仅步骤1**：拟定项目计划 | ✅ 创建新目录 |
 | `/icode review` | **仅步骤2**：专项审查计划 | 用最新目录 |
@@ -22,6 +25,13 @@ description: 六步全流程编码工作流，支持分步手动调用：/icode 
 | `/icode code` | **仅步骤4**：落地编码实施 | 用最新目录 |
 | `/icode deepcheck` | **仅步骤5**：无限轮循环复检 | 用最新目录 |
 | `/icode audit` | **仅步骤6**：终极终审 + 统一修复 | 用最新目录 |
+
+### 帮助说明
+
+**命令**: `/icode help`
+**产出**: 在对话中输出帮助信息（不创建目录和文件）
+
+输出内容即为以下「使用流程示例」和「命令一览」，帮助快速了解工作流调用方式。
 
 ### 使用流程示例
 
