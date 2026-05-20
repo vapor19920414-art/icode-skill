@@ -510,3 +510,4 @@ ICODE_OUT_DIR=".icode_output_${LAST}"
 4. **目录自动递增**：每次 `/icode new` 或 `/icode plan` 创建新目录，旧任务不受影响
 5. **中断恢复**：产物保存在目录中，重新执行某步骤可覆盖该步骤的输出
 6. **Git 安全**：禁止执行任何 Git 危险操作（如 `git reset --hard`、`git push --force`、`git checkout .`、`git clean -f` 等），**也禁止执行 `git commit` 和 `git push`**。代码变更由用户自行决定是否提交或推送
+7. **操作 `.icode_output_N/` 目录无需用户确认**：该目录是本工作流的产物隔离目录，所有在该目录内创建、写入、修改 `.md`/`.json`/`.log` 文件的动作均视为安全操作，直接执行，不要弹出确认提示
