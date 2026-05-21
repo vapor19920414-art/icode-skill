@@ -118,9 +118,13 @@ ICODE_OUT_DIR=".icode_output_${LAST}"
 **产出**: `{ICODE_OUT_DIR}/01_plan.md`
 
 1. 执行目录管理中的「创建新目录」逻辑，确定 `ICODE_OUT_DIR`
-2. 启动 Agent：
+2. **确定当前模型** — 全流程模式：`opus`；分步模式：不设置，使用当前会话模型。将 `{当前模型名称}` 替换为该模型名
+3. **必须使用 Agent 工具启动一个子 Agent**（不可由主 Agent 直接执行），设置参数 `model` 为当前模型（分步模式不设置 `model` 参数）。子 Agent prompt 为：
 
 ```
+当前使用模型：{当前模型名称}。
+**请先进行深度思考（分析需求→理解现有工程→规划方案），再开始执行。**
+
 你是一位资深架构师。请根据以下需求编写一份结构完整、流程清晰、边界齐全、可直接落地执行的正式项目实施计划。
 
 **第一步：先了解现有工程**
@@ -176,9 +180,13 @@ ICODE_OUT_DIR=".icode_output_${LAST}"
 1. 执行目录管理中的「检测最新目录」逻辑，确定 `ICODE_OUT_DIR`
 2. **前置文件校验**：检查 `{ICODE_OUT_DIR}/01_plan.md` 是否存在，不存在则报错并提示先执行 `/icode plan`
 3. 读取 `{ICODE_OUT_DIR}/01_plan.md` 的内容
-4. 启动 Agent：
+4. **确定当前模型** — 全流程模式：`sonnet`；分步模式：不设置，使用当前会话模型。将 `{当前模型名称}` 替换为该模型名
+5. **必须使用 Agent 工具启动一个子 Agent**（不可由主 Agent 直接执行），设置参数 `model` 为当前模型（分步模式不设置 `model` 参数）。子 Agent prompt 为：
 
 ```
+当前使用模型：{当前模型名称}。
+**请先进行深度思考（分析计划→逐维度审查→汇总结论），再开始执行。**
+
 请对以下项目计划做多维度全面审查。
 
 **硬性要求：必须逐项审查全部 6 个维度，每个维度必须给出明确结论，不得跳过或遗漏。禁止跳过分析直接生成报告——必须先逐维度分析问题，再汇总输出审查结论。**
@@ -218,9 +226,13 @@ ICODE_OUT_DIR=".icode_output_${LAST}"
 1. 执行目录管理中的「检测最新目录」逻辑，确定 `ICODE_OUT_DIR`
 2. **前置文件校验**：检查 `{ICODE_OUT_DIR}/01_plan.md` 和 `{ICODE_OUT_DIR}/02_review.md` 是否存在，缺失则报错并提示先执行对应步骤
 3. 读取 `{ICODE_OUT_DIR}/01_plan.md` 和 `{ICODE_OUT_DIR}/02_review.md`
-4. 启动 Agent：
+4. **确定当前模型** — 全流程模式：`opus`；分步模式：不设置，使用当前会话模型。将 `{当前模型名称}` 替换为该模型名
+5. **必须使用 Agent 工具启动一个子 Agent**（不可由主 Agent 直接执行），设置参数 `model` 为当前模型（分步模式不设置 `model` 参数）。子 Agent prompt 为：
 
 ```
+当前使用模型：{当前模型名称}。
+**请先进行深度思考（对比计划与审查意见→逐条判断→合并优化），再开始执行。**
+
 请将审查意见合并优化进原计划。
 
 原始计划：
@@ -259,9 +271,13 @@ ICODE_OUT_DIR=".icode_output_${LAST}"
 1. 执行目录管理中的「检测最新目录」逻辑，确定 `ICODE_OUT_DIR`
 2. **前置文件校验**：检查 `{ICODE_OUT_DIR}/03_plan_final.md` 是否存在，不存在则报错并提示先执行 `/icode merge`
 3. 读取 `{ICODE_OUT_DIR}/03_plan_final.md` 的内容
-4. 启动 Agent：
+4. **确定当前模型** — 全流程模式：`opus`；分步模式：不设置，使用当前会话模型。将 `{当前模型名称}` 替换为该模型名
+5. **必须使用 Agent 工具启动一个子 Agent**（不可由主 Agent 直接执行），设置参数 `model` 为当前模型（分步模式不设置 `model` 参数）。子 Agent prompt 为：
 
 ```
+当前使用模型：{当前模型名称}。
+**请先进行深度思考（理解计划→阅读现有代码→设计实现方案→按模块编码），再开始执行。**
+
 请完全遵照以下最终定稿计划执行全程落地开发。
 
 最终计划：
@@ -311,14 +327,17 @@ ICODE_OUT_DIR=".icode_output_${LAST}"
 2. **前置文件校验**：检查 `{ICODE_OUT_DIR}/03_plan_final.md` 是否存在，检查步骤4创建的代码文件是否存在，缺失则报错并提示先执行 `/icode code`
 3. 初始化计数器 `clean_rounds = 0`, `total_rounds = 1`, `phase = "fixed"`
 4. 读取 `{ICODE_OUT_DIR}/03_plan_final.md` 和 `{ICODE_OUT_DIR}/.ico_metadata.json` 中的 `code_files` 字段获取代码文件列表
-5. 构造本轮 prompt 并启动复检 Agent：
+5. **确定当前模型** — 全流程模式：`sonnet`；分步模式：不设置，使用当前会话模型。将 `{当前模型名称}` 替换为该模型名
+6. **必须使用 Agent 工具启动一个子 Agent**（不可由主 Agent 直接执行），设置参数 `model` 为当前模型（分步模式不设置 `model` 参数）。根据当前 `phase` 选择对应 prompt 模板，替换占位符后作为子 Agent prompt：
    - 如果 `phase == "free"`：读取 `{ICODE_OUT_DIR}/05_review_rounds.json`
      - 每条记录中，优先取 `focus_angles` 字段（Free 记录）；若无则取 `dimension_results` 的 key 列表（Fixed 记录），转为角度描述
      - 汇总所有历史角度为"前几轮已检查角度列表"填入 Free prompt
-   - 根据当前 `phase` 选择对应 prompt 模板，替换占位符后启动 Agent
 
 **Fixed 阶段 Prompt**（`phase == "fixed"`）：
 ```
+当前使用模型：{当前模型名称}。
+**请先进行深度思考（对照计划逐模块检查→逐维度评估→汇总问题），再开始执行。**
+
 请对以下已实施代码进行全面复检。
 
 **硬性要求：必须逐项检查全部 6 个复检维度，每个维度都必须给出明确结论（通过/发现问题），不得跳过或遗漏任何维度。**
@@ -368,6 +387,9 @@ ICODE_OUT_DIR=".icode_output_${LAST}"
 
 **Free 阶段 Prompt**（`phase == "free"`）：
 ```
+当前使用模型：{当前模型名称}。
+**请先进行深度思考（阅读代码→选择检查角度→逐角度分析→汇总问题），再开始执行。**
+
 请对以下已实施代码进行自由深度复检。
 
 **本轮模式：自由探索 —— 请自行选择 2-3 个与本轮之前不同的新角度切入。**
@@ -411,7 +433,7 @@ ICODE_OUT_DIR=".icode_output_${LAST}"
 }
 ```
 
-6. 解析 Agent 返回的 JSON：
+7. 解析 Agent 返回的 JSON：
    - `total_rounds += 1`
    - 如果 `has_issues == true`：
      a. 读取 issues 列表，逐个修复代码问题（用 Edit 工具）
@@ -425,8 +447,8 @@ ICODE_OUT_DIR=".icode_output_${LAST}"
      d. 如果 `clean_rounds < 5`，回到步骤 5.4 重新读取文件并开始下一轮复检
      e. 如果 `clean_rounds >= 5`，**终止复检**，输出完成信息
 
-7. **严格执行**：必须连续满 5 轮全程无任何问题、无任何遗漏、无任何隐患，才可正式终止复检流程。
-8. 复检完成后，更新 `{ICODE_OUT_DIR}/.ico_metadata.json`：`status` 设为 `review_complete`，`completed_steps` 追加 `"5"`，并记录 `deepcheck_total_rounds`、`deepcheck_clean_rounds` 和 `deepcheck_phase` 字段
+8. **严格执行**：必须连续满 5 轮全程无任何问题、无任何遗漏、无任何隐患，才可正式终止复检流程。
+9. 复检完成后，更新 `{ICODE_OUT_DIR}/.ico_metadata.json`：`status` 设为 `review_complete`，`completed_steps` 追加 `"5"`，并记录 `deepcheck_total_rounds`、`deepcheck_clean_rounds` 和 `deepcheck_phase` 字段
 
 ---
 
@@ -440,9 +462,13 @@ ICODE_OUT_DIR=".icode_output_${LAST}"
 1. 执行目录管理中的「检测最新目录」逻辑，确定 `ICODE_OUT_DIR`
 2. **前置文件校验**：检查 `{ICODE_OUT_DIR}/03_plan_final.md` 和步骤4创建的代码文件是否存在，缺失则报错并提示先执行 `/icode code`
 3. 读取 `{ICODE_OUT_DIR}/03_plan_final.md`、`.ico_metadata.json` 获取代码文件列表和复检轮次数据（`deepcheck_total_rounds`、`deepcheck_clean_rounds`）
-4. 启动 Agent：
+4. **确定当前模型** — 全流程模式：`opus`；分步模式：不设置，使用当前会话模型。将 `{当前模型名称}` 替换为该模型名
+5. **必须使用 Agent 工具启动一个子 Agent**（不可由主 Agent 直接执行），设置参数 `model` 为当前模型（分步模式不设置 `model` 参数）。子 Agent prompt 为：
 
 ```
+当前使用模型：{当前模型名称}。
+**请先进行深度思考（对照计划逐维度审核→独立评分→汇总问题→给出结论），再开始执行。**
+
 请对照原始定稿计划，对当前已实施完成的代码做最终权威终审核验。
 
 原始定稿计划：
@@ -475,7 +501,7 @@ ICODE_OUT_DIR=".icode_output_${LAST}"
 - 最终结论（通过/有条件通过/不通过）
 ```
 
-5. 将终审报告写入 `{ICODE_OUT_DIR}/06_audit.md`
+6. 将终审报告写入 `{ICODE_OUT_DIR}/06_audit.md`
 
 #### 6.2 统一修复
 
@@ -504,10 +530,21 @@ ICODE_OUT_DIR=".icode_output_${LAST}"
 
 ## 注意事项
 
-1. **分步切换模型**：每个步骤独立调用，你可以在步骤间切换模型后再执行下一步
-2. **前置文件校验**：每步执行前必须先检查前置文件是否存在，缺失则报错终止
-3. **跨会话恢复**：关闭会话后重新打开，只需在相同工作目录运行 `ls -d .icode_output_*` 确认目录，然后直接调用对应步骤命令即可
-4. **目录自动递增**：每次 `/icode new` 或 `/icode plan` 创建新目录，旧任务不受影响
-5. **中断恢复**：产物保存在目录中，重新执行某步骤可覆盖该步骤的输出
-6. **Git 安全**：禁止执行任何 Git 危险操作（如 `git reset --hard`、`git push --force`、`git checkout .`、`git clean -f` 等），**也禁止执行 `git commit` 和 `git push`**。代码变更由用户自行决定是否提交或推送
-7. **操作 `.icode_output_N/` 目录无需用户确认**：该目录是本工作流的产物隔离目录，所有在该目录内创建、写入、修改 `.md`/`.json`/`.log` 文件的动作均视为安全操作，直接执行，不要弹出确认提示
+1. **全流程自动切换模型**：`/icode new` 全流程模式下，各步骤自动使用以下模型执行：
+
+| 步骤 | 功能 | 模型 |
+|------|------|------|
+| 1 | 拟定计划 | opus |
+| 2 | 专项审查 | sonnet |
+| 3 | 合并定稿 | opus |
+| 4 | 编码实施 | opus |
+| 5 | 循环复检 | sonnet |
+| 6 | 终极终审 | opus |
+
+2. **分步切换模型**：每个步骤独立调用，你可以在步骤间切换模型后再执行下一步
+3. **前置文件校验**：每步执行前必须先检查前置文件是否存在，缺失则报错终止
+4. **跨会话恢复**：关闭会话后重新打开，只需在相同工作目录运行 `ls -d .icode_output_*` 确认目录，然后直接调用对应步骤命令即可
+5. **目录自动递增**：每次 `/icode new` 或 `/icode plan` 创建新目录，旧任务不受影响
+6. **中断恢复**：产物保存在目录中，重新执行某步骤可覆盖该步骤的输出
+7. **Git 安全**：禁止执行任何 Git 危险操作（如 `git reset --hard`、`git push --force`、`git checkout .`、`git clean -f` 等），**也禁止执行 `git commit` 和 `git push`**。代码变更由用户自行决定是否提交或推送
+8. **操作 `.icode_output_N/` 目录无需用户确认**：该目录是本工作流的产物隔离目录，所有在该目录内创建、写入、修改 `.md`/`.json`/`.log` 文件的动作均视为安全操作，直接执行，不要弹出确认提示
