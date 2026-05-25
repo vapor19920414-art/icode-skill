@@ -1,19 +1,22 @@
-# 步骤 2 — 专项审查 + 输出文档
+# 步骤 2 — 多轮专项审查
 
 **命令**: `/icode review`
 **产出**: `{ICODE_OUT_DIR}/02_review.md`
 **模型**: 全流程模式 `sonnet`；分步模式使用当前会话模型
 
+采用**多轮循环审查**模式：循环审查直到连续2轮无新问题，或达到3轮上限。
+
 ## 前置校验
 
 检查 `{ICODE_OUT_DIR}/01_plan.md` 是否存在，不存在则报错并提示先执行 `/icode plan`。
 
-## 执行步骤
+## 执行流程
 
 1. 执行目录管理中的「检测最新目录」逻辑，确定 `ICODE_OUT_DIR`
 2. 读取 `{ICODE_OUT_DIR}/01_plan.md` 的内容
-3. 按「通用规则」确定当前模型
-4. 按「通用规则」启动子 Agent，prompt 为：
+3. 初始化计数器 `clean_rounds = 0`, `total_rounds = 1`
+4. 按「通用规则」确定当前模型
+5. 按「通用规则」启动子 Agent，prompt 为：
 
 ```
 当前使用模型：{当前模型名称}。
@@ -21,12 +24,17 @@
 
 请对以下项目计划做多维度全面审查。
 
+**本轮审查**：第 {total_rounds} 轮
+
 **输出文件路径**：请将审查结果直接写入 `{ICODE_OUT_DIR}/02_review.md`（替换为实际目录路径），**不要写到其他位置后再拷贝**。
 
 **硬性要求：必须逐项审查全部 6 个维度，每个维度必须给出明确结论，不得跳过或遗漏。禁止跳过分析直接生成报告——必须先逐维度分析问题，再汇总输出审查结论。**
 
 计划文档内容：
 {读取 {ICODE_OUT_DIR}/01_plan.md 的内容}
+
+之前轮次已发现的问题（本轮请检查是否遗漏了类似问题）：
+{之前轮次的问题列表，首轮填"无"}
 
 审查维度（必须全部覆盖，缺一不可）：
 1. **逻辑合理性** — 流程是否合理、有无矛盾
@@ -41,14 +49,36 @@
 2. 对每个维度记录具体问题点（有则指出，无则明确写"无问题"）
 3. 最后汇总所有问题，给出总体结论
 
-输出格式：
-- 每个维度独立一节，标题需包含维度编号
-- 每个问题标注：严重程度(高/中/低)、问题描述、改进建议
-- 末尾给出总体结论（通过/有条件通过/不通过）
+输出格式（JSON）：
+{
+  "round": {total_rounds},
+  "has_new_issues": true/false,
+  "new_issues": [
+    {
+      "dimension": "维度编号",
+      "severity": "高/中/低",
+      "description": "问题描述",
+      "suggestion": "改进建议"
+    }
+  ],
+  "summary": "本轮总体评估"
+}
 ```
 
-## 强制操作（完成后必须执行）
+### 强制操作（每轮完成后必须执行）
 
-5. **将子 Agent 返回的审查结果写入 `{ICODE_OUT_DIR}/02_review.md` 文件**（必须使用 Write 工具，不可省略此步骤）
-6. **更新 `{ICODE_OUT_DIR}/.ico_metadata.json`**：将 `status` 设为 `review_done`，`completed_steps` 追加 `"2"`，写回文件
-7. 如果是全流程模式：**立即继续执行步骤3**
+- **将本轮审查结果追加写入 `{ICODE_OUT_DIR}/02_review.md`**（格式：`## 第N轮审查` + JSON内容）
+- 解析本轮 JSON：
+  - `total_rounds += 1`
+  - 如果 `has_new_issues == true`：
+    a. 记录本轮发现的新问题
+    b. **重置 `clean_rounds = 0`**
+    c. 如果 `total_rounds <= 3`，回到步骤5开始下一轮审查
+    d. 如果 `total_rounds > 3`，**终止审查**，输出"达到上限，审查完成"
+  - 如果 `has_new_issues == false`：
+    a. **`clean_rounds += 1`**
+    b. 如果 `clean_rounds < 2`，回到步骤5开始下一轮审查
+    c. 如果 `clean_rounds >= 2`，**终止审查**，输出"连续2轮无新问题，审查完成"
+
+- **更新 `{ICODE_OUT_DIR}/.ico_metadata.json`**：将 `status` 设为 `review_done`，`completed_steps` 追加 `"2"`，并写入 `review_total_rounds` 和 `review_clean_rounds` 字段
+- 如果是全流程模式：**立即继续执行步骤3**
