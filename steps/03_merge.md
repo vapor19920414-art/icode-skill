@@ -43,5 +43,12 @@
 ```
 
 6. **提取定稿内容**（从 ===FINAL PLAN START=== 到 ===FINAL PLAN END===），写入 `{ICODE_OUT_DIR}/03_plan_final.md`
-7. **更新 `.ico_metadata.json`**：`status = plan_finalized`，`completed_steps` 追加 `"3"`
-8. 全流程模式：**立即继续执行步骤4**
+7. **定稿计划自检**：读取刚写入的 `{ICODE_OUT_DIR}/03_plan_final.md`，逐项检查：
+   - 8个章节是否完整（概述、功能需求、架构设计、详细设计、异常处理、实现步骤、校验项、风险评估）
+   - 校验项 checkbox 格式是否正确（`- [ ]` 或 `- [x]`）
+   - 章节编号是否连续、无重复
+   - 所有 [审查采纳] 标记是否与审查意见对应
+   - 任何缺失、断裂、矛盾处必须修复后再继续
+   - **无需添加新功能或重构，仅修复格式和结构问题**
+8. **更新 `.ico_metadata.json`**：`status = plan_finalized`，`completed_steps` 追加 `"3"`
+9. 全流程模式：**立即继续执行步骤4**
