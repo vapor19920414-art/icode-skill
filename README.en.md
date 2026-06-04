@@ -6,7 +6,8 @@ ICode is a Claude Code Skill that breaks down the journey from requirement to de
 
 - **Plan → Review → Finalize → Code → Deep Check → Audit**, six-step closed loop
 - Each step callable independently; switch models between steps
-- Full-flow mode (`/icode new`) auto-switches to the optimal model per step
+- Full-flow mode (`/icode new`) auto-chains all 6 steps
+- All steps run in the main session — no sub-agent isolation issues
 - Outputs saved under `.icode_output_N/`, supports cross-session recovery
 - Metadata management (`.ico_metadata.json`) for execution status and code file tracking
 - Triple-phase deepcheck (Reverse → Fixed → Free) to prevent AI laziness and catch implementation gaps
@@ -47,22 +48,9 @@ git clone <repo-url> ~/.claude/skills/icode
 | `/icode deepcheck` | Step 5 only: iterative re-check | No |
 | `/icode audit` | Step 6 only: final audit + fix | No |
 
-## Model Assignment in Full-Flow
+## Execution
 
-In `/icode new` full-flow mode, each step uses the following model:
-
-| Step | Function | Model | Notes |
-| --- | --- | --- | --- |
-| 1 | Draft plan | Main session | Executed in main session, preserves requirement context |
-| 2 | Review plan | sonnet | Sub-Agent execution |
-| 3 | Merge & finalize | opus | Sub-Agent execution |
-| 4 | Code implementation | opus | Sub-Agent execution |
-| 5 | Iterative re-check | sonnet | Sub-Agent execution |
-| 6 | Final audit | opus | Sub-Agent execution |
-
-- **Step 1** runs directly in the main session, preserving all requirement discussion context
-- **Steps 2-6** use sub-Agents for model switching and context isolation
-- In step-by-step mode, each step uses the current session model — you decide
+All 6 steps run in the main session with the current model. No automatic model switching — use `/model` manually if needed.
 
 ## Directory Structure
 
