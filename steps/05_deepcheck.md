@@ -68,7 +68,7 @@ Free 阶段一次性完整覆盖全部 15 个角度。
 - 验证代码注释与实际执行路径是否一致
 - 列出**从代码无法确定**的需求（标注 "unclear"）
 
-向 `{ICODE_OUT_DIR}/05_deepcheck.jsonl` 追加一行 `phase = "reverse"` 的 JSON 记录。
+向 `{ICODE_OUT_DIR}/05_deepcheck.jsonl` 追加一行 `phase = "reverse"` 的 JSON 记录。**必须严格遵守下方固定 schema**，禁止自行新增、删除、改名顶层字段；若某阶段字段本轮不适用，必须保留字段并填空数组、空字符串或 `false`，不得省略。
 
 **对比**：读取 `03_plan_final.md`，与逆推规格做机械 diff：
 - **欠实现**：计划有，逆推没有
@@ -91,11 +91,145 @@ Free 阶段一次性完整覆盖全部 15 个角度。
 6. 潜在隐患 — 内存泄漏、死锁、资源竞争、安全漏洞
 7. 跨文件一致性 — 接口变更全链路同步
 
-向 `05_deepcheck.jsonl` 追加一行当前轮 JSON，包含 `phase`、`round`、`has_issues`、`summary`、各维度结果与修复动作。
+向 `05_deepcheck.jsonl` 追加一行当前轮 JSON，仍必须满足完整固定 schema。
 
 ### 阶段 3 — Free（自由探索）
 
 **重新读取所有代码文件**。一次性完整覆盖全部 15 个角度（A1-A15），每个角度须给出 3+ 具体检查点（文件名+行号）。严禁"整体通过"等偷懒措辞。
+
+### 固定 JSONL Schema
+
+`05_deepcheck.jsonl` 的每一行都必须是**完全相同的顶层结构**，字段顺序固定如下：
+
+```json
+{
+  "schema_version": "icode.deepcheck.v1",
+  "step": "deepcheck",
+  "phase": "fixed",
+  "round": 2,
+  "has_issues": false,
+  "summary": "Fixed 阶段首轮 clean，进入 Free",
+  "traceability_matrix": [
+    {
+      "plan_item": "实现 rain_sensor_read 接口",
+      "code_refs": ["src/rain_sensor.c#L88", "include/rain_sensor.h#L21"],
+      "status": "implemented",
+      "notes": "参数校验与错误码返回已落地"
+    }
+  ],
+  "files_snapshot": [
+    {
+      "path": "src/rain_sensor.c",
+      "exports": ["int rain_sensor_read(rain_sensor_t *ctx, int *mm)"],
+      "key_types": ["struct rain_sensor_t"],
+      "key_behaviors": ["读取前检查 ctx/mm 非空", "失败时返回 -EINVAL"]
+    }
+  ],
+  "reverse_analysis": {
+    "inferred_spec": ["驱动提供初始化和读数接口"],
+    "unclear_requirements": ["是否需要支持异步读取"],
+    "plan_gaps": ["计划未说明重试次数上限"],
+    "code_extras": ["代码新增调试日志开关"]
+  },
+  "fixed_results": [
+    {
+      "dimension": "plan_alignment",
+      "status": "clean",
+      "evidence": ["03_plan_final.md#L52 对应 src/rain_sensor.c#L88"],
+      "issue_ids": []
+    },
+    {
+      "dimension": "logic_closure",
+      "status": "clean",
+      "evidence": ["初始化到读取的数据流已闭环"],
+      "issue_ids": []
+    },
+    {
+      "dimension": "error_handling",
+      "status": "issue_found",
+      "evidence": ["超时重试失败后缺少日志分支"],
+      "issue_ids": ["D2-1"]
+    },
+    {
+      "dimension": "boundary_cases",
+      "status": "clean",
+      "evidence": ["已覆盖空指针与 nack 场景"],
+      "issue_ids": []
+    },
+    {
+      "dimension": "style_consistency",
+      "status": "clean",
+      "evidence": ["命名与错误码风格一致"],
+      "issue_ids": []
+    },
+    {
+      "dimension": "latent_risks",
+      "status": "clean",
+      "evidence": ["未见资源泄漏或竞态"],
+      "issue_ids": []
+    },
+    {
+      "dimension": "cross_file_consistency",
+      "status": "clean",
+      "evidence": ["头文件声明与实现同步"],
+      "issue_ids": []
+    }
+  ],
+  "free_results": [
+    {
+      "angle": "A1",
+      "status": "clean",
+      "evidence": ["src/rain_sensor.c#L88", "include/rain_sensor.h#L21", "tests/rain_sensor_test.c#L14"],
+      "issue_ids": []
+    }
+  ],
+  "issues": [
+    {
+      "id": "D2-1",
+      "severity": "major",
+      "title": "超时失败后缺少日志",
+      "code_refs": ["src/rain_sensor.c#L114"],
+      "suggestion": "补充超时失败日志并保持错误码透传"
+    }
+  ],
+  "fixes_applied": [
+    {
+      "issue_id": "D2-1",
+      "files": ["src/rain_sensor.c"],
+      "summary": "补充超时失败日志分支"
+    }
+  ],
+  "next_phase": "free"
+}
+```
+
+固定约束：
+
+- `schema_version` 固定为 `icode.deepcheck.v1`
+- `step` 固定为 `deepcheck`
+- `phase` 只能是 `reverse`、`fixed`、`free`
+- `traceability_matrix[*].status` 只能是 `implemented`、`partial`、`missing`、`unclear`
+- `fixed_results` 必须严格按以下顺序输出 7 项：`plan_alignment`、`logic_closure`、`error_handling`、`boundary_cases`、`style_consistency`、`latent_risks`、`cross_file_consistency`
+- `fixed_results[*].status` 只能是 `clean` 或 `issue_found`
+- `free_results` 仅允许使用角度编号 `A1` 到 `A15`；Free 阶段必须覆盖全部 15 项且顺序固定，Reverse/Fixed 阶段则必须输出空数组
+- `issues[*].severity` 只能是 `critical`、`major`、`minor`
+- `next_phase` 只能是 `fixed`、`free`、`done`
+- Reverse 阶段：`fixed_results`、`free_results` 必须为空数组，`reverse_analysis` 必须填写
+- Fixed 阶段：`reverse_analysis` 可保留为空对象内容，`fixed_results` 必须 7 项齐全，`free_results` 必须为空数组
+- Free 阶段：`fixed_results` 必须为空数组，`free_results` 必须 15 项齐全
+- `has_issues = false` 时 `issues` 必须为空数组；`has_issues = true` 时 `issues` 不得为空
+
+### Issue 固定结构
+
+```json
+{
+  "id": "D2-1",
+  "severity": "major",
+  "title": "超时失败后缺少日志",
+  "code_refs": ["src/rain_sensor.c#L114"],
+  "suggestion": "补充超时失败日志并保持错误码透传"
+}
+```
 
 ### 循环控制
 
@@ -110,15 +244,36 @@ Free 阶段一次性完整覆盖全部 15 个角度。
 - 终止后更新 `.ico_metadata.json`：`status = deepcheck_done`，`completed_steps` 追加 `"5"`
 - 全流程模式：**立即继续执行步骤6**
 
-### JSONL 建议字段结构
+### 最小合法示例
 
 ```json
 {
+  "schema_version": "icode.deepcheck.v1",
+  "step": "deepcheck",
   "phase": "fixed",
   "round": 2,
   "has_issues": false,
   "summary": "Fixed 阶段首轮 clean，进入 Free",
+  "traceability_matrix": [],
+  "files_snapshot": [],
+  "reverse_analysis": {
+    "inferred_spec": [],
+    "unclear_requirements": [],
+    "plan_gaps": [],
+    "code_extras": []
+  },
+  "fixed_results": [
+    {"dimension": "plan_alignment", "status": "clean", "evidence": [""], "issue_ids": []},
+    {"dimension": "logic_closure", "status": "clean", "evidence": [""], "issue_ids": []},
+    {"dimension": "error_handling", "status": "clean", "evidence": [""], "issue_ids": []},
+    {"dimension": "boundary_cases", "status": "clean", "evidence": [""], "issue_ids": []},
+    {"dimension": "style_consistency", "status": "clean", "evidence": [""], "issue_ids": []},
+    {"dimension": "latent_risks", "status": "clean", "evidence": [""], "issue_ids": []},
+    {"dimension": "cross_file_consistency", "status": "clean", "evidence": [""], "issue_ids": []}
+  ],
+  "free_results": [],
   "issues": [],
-  "fixes_applied": []
+  "fixes_applied": [],
+  "next_phase": "free"
 }
 ```

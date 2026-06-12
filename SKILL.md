@@ -139,7 +139,7 @@ ICODE_OUT_DIR=".icode_output_${LAST}"
 - **`.icode_output_N/` 目录无需用户确认**：该目录下创建/写入/修改 `.md`/`.json`/`.log` 文件均为安全操作
 - **跨会话恢复**：运行 `ls -d .icode_output_*` 确认目录后，直接调用对应步骤即可
 - **中断恢复**：重新执行同一步骤即可断点续跑；步骤 2 依据 metadata 轮次继续向 `02_review.jsonl` 追加，步骤 5 依据 phase/轮次继续向 `05_deepcheck.jsonl` 追加
-- **汇总格式说明**：步骤 2 只保留 `02_review.jsonl` 作为审查真值源；步骤 5 只保留 `05_deepcheck.jsonl` 作为复检真值源，均采用 JSONL 格式（每行一个 JSON 对象）
+- **汇总格式说明**：步骤 2 只保留 `02_review.jsonl` 作为审查真值源；步骤 5 只保留 `05_deepcheck.jsonl` 作为复检真值源，均采用 JSONL 格式（每行一个 JSON 对象），且必须严格遵守各步骤文件定义的固定 schema
 
 ## 各步骤详细规则
 

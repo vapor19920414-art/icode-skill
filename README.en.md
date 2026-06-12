@@ -15,8 +15,8 @@ ICode is a Claude Code Skill that breaks down the journey from requirement to de
 - Architecture Decision Records (ADR) section for centralized decision tracking
 - Review supports custom round count (`/icode review [N]`) and incremental review mode
 - Structured review issues (affected sections / suggestion / rejection risk)
-- Step 2 output compressed into a single `02_review.jsonl`
-- Step 5 output compressed into a single `05_deepcheck.jsonl`
+- Step 2 output compressed into a single `02_review.jsonl` with a fixed schema
+- Step 5 output compressed into a single `05_deepcheck.jsonl` with a fixed schema
 
 ## Installation
 

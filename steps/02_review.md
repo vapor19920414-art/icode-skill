@@ -54,12 +54,14 @@
 1. 逻辑合理性、2. 流程完整性、3. 场景覆盖度、4. 风险遗漏、5. 落地可行性、6. 现有实现对照
 
 **步骤 2.6 — 写入结果**：
-向 `{ICODE_OUT_DIR}/02_review.jsonl` 追加一行 JSON，包含：round、mode（`full`/`incremental`）、independent_plan_summary、file_review（files_read + key_findings）、comparison_analysis、dimension_results、has_new_issues、new_issues（每条 issue 遵循下方 Issue 结构化模板）、summary。
+向 `{ICODE_OUT_DIR}/02_review.jsonl` 追加一行 JSON。**必须严格遵守下方固定 schema**，禁止自行新增、删除、改名顶层字段；若某字段本轮不适用，必须保留字段并填空数组、空字符串或 `false`，不得省略。
 
 要求：
 - 每轮只追加 1 行，不再拆分 `review_round_*.json`
 - `summary` 字段必须足够让人直接从 JSONL 快速浏览当前轮结论
 - 续跑时读取 `02_review.jsonl` 最后一行即可获取最近一轮结论
+- `dimension_results` 必须固定为 6 项，按下方枚举顺序输出，不得缺项、并项、改名
+- 首轮与增量轮都必须输出完整 schema；增量轮不得因“只审部分章节”而省略 `independent_plan_summary`、`comparison_analysis`、`file_review.summary` 等字段
 
 ### 后续轮次 — 增量审查（`total_rounds > 1`，不再重复通读文件）
 
@@ -70,7 +72,111 @@
 3. **断言验证跟进**：审查上一轮 `[未验证]` 断言是否已在计划更新中解决
 4. **遗漏深挖**：基于之前轮次的发现继续深入，检查更深层次风险
 
-维度同首轮，但仅针对增量范围。完成后向 `02_review.jsonl` 追加当前轮 JSON。
+维度同首轮，但仅针对增量范围。完成后向 `02_review.jsonl` 追加当前轮 JSON，仍必须满足完整固定 schema。
+
+### 固定 JSONL Schema
+
+`02_review.jsonl` 的每一行都必须是**完全相同的顶层结构**，字段顺序固定如下：
+
+```json
+{
+  "schema_version": "icode.review.v1",
+  "step": "review",
+  "round": 1,
+  "mode": "full",
+  "has_new_issues": true,
+  "summary": "首轮发现 2 个结构性问题，需补充接口约束与异常路径",
+  "independent_plan_summary": {
+    "architecture": "分层结构，驱动层与适配层分离",
+    "modules": ["驱动初始化", "I2C 读写封装"],
+    "interfaces": ["rain_sensor_init(ctx)", "rain_sensor_read(mm)"],
+    "implementation_steps": ["补齐数据结构", "实现错误码映射"]
+  },
+  "file_review": {
+    "files_read": [
+      {
+        "path": "src/rain_sensor.c",
+        "role": "existing_source",
+        "key_constraints": ["接口返回 int 错误码", "日志使用 RS_LOGE 宏"],
+        "key_findings": ["计划遗漏超时重试上限约束"]
+      }
+    ],
+    "key_findings": ["现有接口要求错误码透传，计划未体现"],
+    "summary": "已逐文件通读 3 个相关文件，发现 1 个未在计划中体现的接口约束"
+  },
+  "comparison_analysis": {
+    "missing_points": ["缺少重试策略章节"],
+    "deviations": ["计划中的缓存层与现有实现风格不一致"],
+    "extra_points": ["独立方案建议增加错误码映射表"],
+    "verdict": "计划主体可用，但需补齐接口约束与异常路径"
+  },
+  "incremental_scope": {
+    "changed_sections": ["6. 异常处理"],
+    "cross_section_impacts": ["错误码变更影响调用方返回值说明"],
+    "assertion_followups": ["[未验证] 的超时重试次数已补证"],
+    "deeper_risks": ["新增重试逻辑可能与现有限流宏冲突"]
+  },
+  "dimension_results": [
+    {
+      "dimension": "logic_reasoning",
+      "status": "issue_found",
+      "evidence": ["01_plan.md#L40: 初始化流程缺少失败回滚说明"],
+      "issue_ids": ["R1-1"]
+    },
+    {
+      "dimension": "flow_completeness",
+      "status": "clean",
+      "evidence": ["已检查初始化、读取、错误返回三段流程，未发现断裂"],
+      "issue_ids": []
+    },
+    {
+      "dimension": "scenario_coverage",
+      "status": "issue_found",
+      "evidence": ["缺少 I2C nack 场景"],
+      "issue_ids": ["R1-2"]
+    },
+    {
+      "dimension": "risk_omission",
+      "status": "clean",
+      "evidence": ["已检查资源释放与重入限制，未见新增风险"],
+      "issue_ids": []
+    },
+    {
+      "dimension": "implementation_feasibility",
+      "status": "clean",
+      "evidence": ["实现步骤与现有目录结构兼容"],
+      "issue_ids": []
+    },
+    {
+      "dimension": "existing_implementation_alignment",
+      "status": "issue_found",
+      "evidence": ["现有错误码定义与计划中的枚举命名不一致"],
+      "issue_ids": ["R1-3"]
+    }
+  ],
+  "new_issues": [
+    {
+      "id": "R1-1",
+      "affected_sections": ["6. 异常处理"],
+      "suggestion": "补充初始化失败后的资源回滚步骤",
+      "rejection_risk": "失败后状态残留，导致后续重复初始化异常"
+    }
+  ]
+}
+```
+
+固定约束：
+
+- `schema_version` 固定为 `icode.review.v1`
+- `step` 固定为 `review`
+- `mode` 只能是 `full` 或 `incremental`
+- `file_review.files_read[*].role` 只能是 `existing_source`、`planned_new_file`、`dependency`
+- `file_review.key_findings` 必须汇总逐文件通读发现，供步骤3直接消费；即使为空也必须保留为空数组
+- `dimension_results` 必须严格按以下顺序输出 6 项：`logic_reasoning`、`flow_completeness`、`scenario_coverage`、`risk_omission`、`implementation_feasibility`、`existing_implementation_alignment`
+- `dimension_results[*].status` 只能是 `clean` 或 `issue_found`
+- `new_issues` 允许为空数组，但 `has_new_issues = true` 时不得为空；`has_new_issues = false` 时必须为空数组
+- 首轮 `mode = full`；后续轮次 `mode = incremental`
+- 首轮 `incremental_scope` 允许各数组为空，但字段本身不得缺失
 
 ### Issue 结构化模板
 
@@ -94,14 +200,47 @@
 - 终止后更新 `.ico_metadata.json`：`status = review_done`，`completed_steps` 追加 `"2"`
 - 全流程模式：**立即继续执行步骤3**
 
-### JSONL 建议字段结构
+### 最小合法示例
 
 ```json
 {
+  "schema_version": "icode.review.v1",
+  "step": "review",
   "round": 1,
   "mode": "full",
-  "has_new_issues": true,
-  "summary": "首轮发现 2 个结构性问题，需补充接口约束与异常路径",
+  "has_new_issues": false,
+  "summary": "首轮未发现新增问题，计划可进入定稿",
+  "independent_plan_summary": {
+    "architecture": "",
+    "modules": [],
+    "interfaces": [],
+    "implementation_steps": []
+  },
+  "file_review": {
+    "files_read": [],
+    "key_findings": [],
+    "summary": ""
+  },
+  "comparison_analysis": {
+    "missing_points": [],
+    "deviations": [],
+    "extra_points": [],
+    "verdict": ""
+  },
+  "incremental_scope": {
+    "changed_sections": [],
+    "cross_section_impacts": [],
+    "assertion_followups": [],
+    "deeper_risks": []
+  },
+  "dimension_results": [
+    {"dimension": "logic_reasoning", "status": "clean", "evidence": [""], "issue_ids": []},
+    {"dimension": "flow_completeness", "status": "clean", "evidence": [""], "issue_ids": []},
+    {"dimension": "scenario_coverage", "status": "clean", "evidence": [""], "issue_ids": []},
+    {"dimension": "risk_omission", "status": "clean", "evidence": [""], "issue_ids": []},
+    {"dimension": "implementation_feasibility", "status": "clean", "evidence": [""], "issue_ids": []},
+    {"dimension": "existing_implementation_alignment", "status": "clean", "evidence": [""], "issue_ids": []}
+  ],
   "new_issues": []
 }
 ```
