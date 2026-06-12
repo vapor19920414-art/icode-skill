@@ -67,7 +67,8 @@ All 6 steps run in the main session with the current model. No automatic model s
 ├── review_round_*.json     # Step 2: Per-round review details (JSON)
 ├── 03_plan_final.md        # Step 3: Finalized plan
 ├── 05_reverse.json         # Step 5: Reverse-engineered spec (single JSON)
-├── 05_review_rounds.json   # Step 5: Review round logs (JSONL)
+├── deepcheck_round_*.json  # Step 5: Per-round deepcheck details (JSON)
+├── 05_review_rounds.json   # Step 5: Deepcheck round summary (JSONL, one JSON object per line)
 ├── 06_audit.md             # Step 6: Audit report
 └── 06_fixes.log            # Step 6: Fix log
 ```

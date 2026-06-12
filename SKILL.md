@@ -90,7 +90,6 @@ ICODE_OUT_DIR=".icode_output_${LAST}"
   "total_rounds": 1,
   "clean_rounds": 0,
   "max_rounds": 3,
-  "phase": "reverse",
   "code_compile_failed": false,
   "deepcheck_total_rounds": 0,
   "deepcheck_clean_rounds": 0,
@@ -104,9 +103,8 @@ ICODE_OUT_DIR=".icode_output_${LAST}"
 
 **可选字段**（按需写入，缺失视为默认值）：
 - `total_rounds` / `clean_rounds` / `max_rounds`：步骤 2 续跑用（`max_rounds` 由 `/icode review [N]` 参数决定，默认 3）
-- `phase`：步骤 5 续跑用（值：`reverse` / `fixed` / `free`）
 - `code_compile_failed`：步骤 4 编译失败标记（`true` 时步骤 5 入口输出警告）
-- `deepcheck_total_rounds` / `deepcheck_clean_rounds` / `deepcheck_phase`：步骤 5 完成时记录
+- `deepcheck_total_rounds` / `deepcheck_clean_rounds` / `deepcheck_phase`：步骤 5 续跑+完成记录用（`deepcheck_phase` 值：`reverse` / `fixed` / `free`）
 
 **`status` 字段枚举**（统一词表，所有步骤必须严格遵守，禁止自定义）：
 
@@ -115,7 +113,7 @@ ICODE_OUT_DIR=".icode_output_${LAST}"
 | 1 | `plan_done` | 步骤1计划完成 |
 | 2 | `review_in_progress` → `review_done` | 步骤2审查中 → 完成 |
 | 3 | `plan_finalized` | 步骤3定稿完成 |
-| 4 | `code_in_progress` → `code_done` | 步骤4编码中 → 完成 |
+| 4 | `code_in_progress` → `code_done`（或 `code_compile_failed`） | 步骤4编码中 → 完成（或编译失败待修复） |
 | 5 | `deepcheck_in_progress` → `deepcheck_done` | 步骤5复检中 → 完成 |
 | 6 | `completed` | 步骤6终审完成（终态） |
 
@@ -141,6 +139,7 @@ ICODE_OUT_DIR=".icode_output_${LAST}"
 - **`.icode_output_N/` 目录无需用户确认**：该目录下创建/写入/修改 `.md`/`.json`/`.log` 文件均为安全操作
 - **跨会话恢复**：运行 `ls -d .icode_output_*` 确认目录后，直接调用对应步骤即可
 - **中断恢复**：重新执行某步骤可覆盖该步骤输出
+- **汇总格式说明**：步骤 2 的 `02_review.md` 使用 Markdown 内嵌 JSON（便于人类直接阅读审查报告），步骤 5 的 `05_review_rounds.json` 使用 JSONL 格式（每行一个 JSON 对象，便于脚本/程序批量解析复检记录）。两者设计目的不同，故格式各异
 
 ## 各步骤详细规则
 

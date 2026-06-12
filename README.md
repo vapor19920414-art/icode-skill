@@ -67,7 +67,8 @@ git clone <repo-url> ~/.claude/skills/icode
 ├── review_round_*.json     # 步骤2：各轮审查详情（JSON）
 ├── 03_plan_final.md        # 步骤3：定稿计划
 ├── 05_reverse.json         # 步骤5：逆推规格（单条 JSON）
-├── 05_review_rounds.json   # 步骤5：复检轮次记录（JSONL）
+├── deepcheck_round_*.json  # 步骤5：各轮复检详情（JSON）
+├── 05_review_rounds.json   # 步骤5：复检轮次汇总（JSONL，每行一个 JSON 对象）
 ├── 06_audit.md             # 步骤6：终审报告
 └── 06_fixes.log            # 步骤6：修复日志
 ```

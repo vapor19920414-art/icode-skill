@@ -1,0 +1,8 @@
+# ICode 工作流产物目录
+.icode_output_*/
+
+# 编辑器临时文件
+*~
+*.swp
+*.swo
+.DS_Store
