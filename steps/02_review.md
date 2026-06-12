@@ -1,7 +1,7 @@
 # 步骤 2 — 多轮专项审查
 
 **命令**: `/icode review [N]`
-**产出**: `{ICODE_OUT_DIR}/02_review.md`
+**产出**: `{ICODE_OUT_DIR}/02_review.jsonl`
 **会话**: 主会话
 
 采用**独立计划对比 + 多轮循环审查**模式：
@@ -19,8 +19,8 @@
 3. **深度思考**（必须先执行）：需求分解 → 独立方案构思 → 对比要点预判
 4. **分步续跑检测**：
    - 解析命令参数获取 `max_rounds`：若 `/icode review N` 提供了正整数 N，则 `max_rounds = N`；否则 `max_rounds = 3`
-   - 若 `.ico_metadata.json.status == "review_in_progress"`，从 metadata 恢复 `total_rounds` / `clean_rounds` 字段
-   - 同时读取所有已存在的 `review_round_*.json` 汇总历史问题
+  - 若 `.ico_metadata.json.status == "review_in_progress"`，从 metadata 恢复 `total_rounds` / `clean_rounds` 字段
+    - 同时读取已存在的 `02_review.jsonl` 汇总历史问题
    - 跳过已完成轮次，从当前 `total_rounds` 继续
    - 续跑时以 metadata 中保存的 `max_rounds` 为准（首次执行时写入 metadata）
    - 输出续跑信息：`▶ 步骤2 续跑，从第{total_rounds}轮开始（已完成{total_rounds-1}轮，最多{max_rounds}轮）`
@@ -54,16 +54,12 @@
 1. 逻辑合理性、2. 流程完整性、3. 场景覆盖度、4. 风险遗漏、5. 落地可行性、6. 现有实现对照
 
 **步骤 2.6 — 写入结果**：
-以 JSON 格式写入 `{ICODE_OUT_DIR}/review_round_1.json`，包含：independent_plan_summary、file_review（files_read + key_findings）、comparison_analysis、dimension_results、has_new_issues、new_issues（每条 issue 遵循下方 Issue 结构化模板）、summary。
+向 `{ICODE_OUT_DIR}/02_review.jsonl` 追加一行 JSON，包含：round、mode（`full`/`incremental`）、independent_plan_summary、file_review（files_read + key_findings）、comparison_analysis、dimension_results、has_new_issues、new_issues（每条 issue 遵循下方 Issue 结构化模板）、summary。
 
-再追加写入 `{ICODE_OUT_DIR}/02_review.md`，格式为：
-
-````markdown
-## 第N轮审查
-```json
-{完整 JSON 内容}
-```
-````
+要求：
+- 每轮只追加 1 行，不再拆分 `review_round_*.json`
+- `summary` 字段必须足够让人直接从 JSONL 快速浏览当前轮结论
+- 续跑时读取 `02_review.jsonl` 最后一行即可获取最近一轮结论
 
 ### 后续轮次 — 增量审查（`total_rounds > 1`，不再重复通读文件）
 
@@ -74,7 +70,7 @@
 3. **断言验证跟进**：审查上一轮 `[未验证]` 断言是否已在计划更新中解决
 4. **遗漏深挖**：基于之前轮次的发现继续深入，检查更深层次风险
 
-维度同首轮，但仅针对增量范围。写入 `review_round_{total_rounds}.json` 后再追加写入 `02_review.md`。
+维度同首轮，但仅针对增量范围。完成后向 `02_review.jsonl` 追加当前轮 JSON。
 
 ### Issue 结构化模板
 
@@ -97,3 +93,15 @@
 - 无 issues：`clean_rounds += 1`，若 `clean_rounds < 2` 且 `total_rounds <= max_rounds` 继续后续轮次，否则终止
 - 终止后更新 `.ico_metadata.json`：`status = review_done`，`completed_steps` 追加 `"2"`
 - 全流程模式：**立即继续执行步骤3**
+
+### JSONL 建议字段结构
+
+```json
+{
+  "round": 1,
+  "mode": "full",
+  "has_new_issues": true,
+  "summary": "首轮发现 2 个结构性问题，需补充接口约束与异常路径",
+  "new_issues": []
+}
+```

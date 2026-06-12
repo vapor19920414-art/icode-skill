@@ -1,7 +1,7 @@
 # 步骤 5 — 三阶段递进深度复检
 
 **命令**: `/icode deepcheck`
-**产出**: `{ICODE_OUT_DIR}/05_reverse.json` + `{ICODE_OUT_DIR}/05_review_rounds.json`
+**产出**: `{ICODE_OUT_DIR}/05_deepcheck.jsonl`
 **会话**: 主会话
 
 ## 前置校验
@@ -48,9 +48,9 @@ Free 阶段一次性完整覆盖全部 15 个角度。
 
 1. 检测最新目录，确定 `ICODE_OUT_DIR`
 2. 读取 `03_plan_final.md` 和 `.ico_metadata.json`
-   - 若 `.ico_metadata.json.code_compile_failed == true`，输出 `⚠️ 步骤4编译失败，仍继续复检` 警告
+  - 若 `.ico_metadata.json.status == "code_compile_failed"`，输出 `⚠️ 步骤4编译失败，仍继续复检` 警告
 3. **深度思考**（必须先执行）：梳理代码清单 → 回顾计划要点 → 制定逆推/Fixed/Free 检查策略
-4. **分步续跑**：若 `status == "deepcheck_in_progress"`，从 metadata 恢复 `deepcheck_total_rounds` / `deepcheck_clean_rounds` / `deepcheck_phase`，同时读取已存在的 `05_reverse.json`（若存在则跳过 Reverse）和 `deepcheck_round_*.json`
+4. **分步续跑**：若 `status == "deepcheck_in_progress"`，从 metadata 恢复 `deepcheck_total_rounds` / `deepcheck_clean_rounds` / `deepcheck_phase`，同时读取已存在的 `05_deepcheck.jsonl`；若其中已存在 `phase = "reverse"` 的记录，则跳过 Reverse
 5. 否则初始化 `deepcheck_clean_rounds = 0`, `deepcheck_total_rounds = 1`, `deepcheck_phase = "reverse"`, `status = deepcheck_in_progress`
 6. 输出：`▶ 步骤5 复检开始`
 
@@ -68,13 +68,13 @@ Free 阶段一次性完整覆盖全部 15 个角度。
 - 验证代码注释与实际执行路径是否一致
 - 列出**从代码无法确定**的需求（标注 "unclear"）
 
-写入 `{ICODE_OUT_DIR}/05_reverse.json`。
+向 `{ICODE_OUT_DIR}/05_deepcheck.jsonl` 追加一行 `phase = "reverse"` 的 JSON 记录。
 
 **对比**：读取 `03_plan_final.md`，与逆推规格做机械 diff：
 - **欠实现**：计划有，逆推没有
 - **偏离/冗余**：逆推有，计划没提
 
-发现问题则用 Edit 修复代码。更新计数器，写入 `deepcheck_round_1.json` 和**追加一行 JSON 到** `05_review_rounds.json`（JSONL 格式，每行一个完整的 JSON 对象）。`deepcheck_phase` 切换为 `"fixed"`。
+发现问题则用 Edit 修复代码。更新计数器，并在 `05_deepcheck.jsonl` 中继续追加当前轮结果。`deepcheck_phase` 切换为 `"fixed"`。
 
 ### 阶段 2 — Fixed（固定维度）
 
@@ -91,7 +91,7 @@ Free 阶段一次性完整覆盖全部 15 个角度。
 6. 潜在隐患 — 内存泄漏、死锁、资源竞争、安全漏洞
 7. 跨文件一致性 — 接口变更全链路同步
 
-写入 `deepcheck_round_{deepcheck_total_rounds}.json` 和**追加一行 JSON 到** `05_review_rounds.json`（JSONL 格式）。
+向 `05_deepcheck.jsonl` 追加一行当前轮 JSON，包含 `phase`、`round`、`has_issues`、`summary`、各维度结果与修复动作。
 
 ### 阶段 3 — Free（自由探索）
 
@@ -109,3 +109,16 @@ Free 阶段一次性完整覆盖全部 15 个角度。
   - Free 完成后 → 终止
 - 终止后更新 `.ico_metadata.json`：`status = deepcheck_done`，`completed_steps` 追加 `"5"`
 - 全流程模式：**立即继续执行步骤6**
+
+### JSONL 建议字段结构
+
+```json
+{
+  "phase": "fixed",
+  "round": 2,
+  "has_issues": false,
+  "summary": "Fixed 阶段首轮 clean，进入 Free",
+  "issues": [],
+  "fixes_applied": []
+}
+```

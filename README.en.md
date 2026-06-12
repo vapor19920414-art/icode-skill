@@ -15,6 +15,8 @@ ICode is a Claude Code Skill that breaks down the journey from requirement to de
 - Architecture Decision Records (ADR) section for centralized decision tracking
 - Review supports custom round count (`/icode review [N]`) and incremental review mode
 - Structured review issues (affected sections / suggestion / rejection risk)
+- Step 2 output compressed into a single `02_review.jsonl`
+- Step 5 output compressed into a single `05_deepcheck.jsonl`
 
 ## Installation
 
@@ -27,7 +29,7 @@ git clone <repo-url> ~/.claude/skills/icode
 ## Quick Start
 
 ```bash
-# One-shot full flow (auto model switching)
+# One-shot full flow
 /icode new Implement MCU rain sensor I2C driver
 
 # Or step by step
@@ -37,7 +39,7 @@ git clone <repo-url> ~/.claude/skills/icode
 /icode merge                                        # Step 3: Merge & finalize
 /icode code                                         # Step 4: Code implementation
 /icode deepcheck                                    # Step 5: Iterative re-review
-/icode audit                                        # Step 6: Final audit & fix
+/icode audit                                        # Step 6: Final audit report
 ```
 
 ## Commands
@@ -51,7 +53,7 @@ git clone <repo-url> ~/.claude/skills/icode
 | `/icode merge` | Step 3 only: merge reviews & finalize | No |
 | `/icode code` | Step 4 only: implement code | No |
 | `/icode deepcheck` | Step 5 only: iterative re-check | No |
-| `/icode audit` | Step 6 only: final audit + fix | No |
+| `/icode audit` | Step 6 only: final audit report | No |
 
 ## Execution
 
@@ -63,14 +65,10 @@ All 6 steps run in the main session with the current model. No automatic model s
 .icode_output_N/
 ├── .ico_metadata.json      # Metadata (status, code file list)
 ├── 01_plan.md              # Step 1: Project plan
-├── 02_review.md            # Step 2: Review report
-├── review_round_*.json     # Step 2: Per-round review details (JSON)
+├── 02_review.jsonl         # Step 2: Review timeline (JSONL, one round per line)
 ├── 03_plan_final.md        # Step 3: Finalized plan
-├── 05_reverse.json         # Step 5: Reverse-engineered spec (single JSON)
-├── deepcheck_round_*.json  # Step 5: Per-round deepcheck details (JSON)
-├── 05_review_rounds.json   # Step 5: Deepcheck round summary (JSONL, one JSON object per line)
+├── 05_deepcheck.jsonl      # Step 5: Reverse/Fixed/Free deepcheck timeline (JSONL)
 ├── 06_audit.md             # Step 6: Audit report
-└── 06_fixes.log            # Step 6: Fix log
 ```
 
 ## Workflow
@@ -83,7 +81,7 @@ All 6 steps run in the main session with the current model. No automatic model s
 
 ## Version
 
-Current version: v1.3.0
+Current version: v1.5.0
 
 For detailed step descriptions, see [SKILL.md](SKILL.md).
 

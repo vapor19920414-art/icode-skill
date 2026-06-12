@@ -6,18 +6,18 @@
 
 ## 前置校验
 
-检查 `{ICODE_OUT_DIR}/01_plan.md` 和 `{ICODE_OUT_DIR}/02_review.md` 是否存在，缺失则报错并提示先执行对应步骤。
+检查 `{ICODE_OUT_DIR}/01_plan.md` 和 `{ICODE_OUT_DIR}/02_review.jsonl` 是否存在，缺失则报错并提示先执行对应步骤。
 
 ## 执行步骤
 
 1. 执行目录管理中的「检测最新目录」逻辑，确定 `ICODE_OUT_DIR`
-2. 读取 `{ICODE_OUT_DIR}/01_plan.md`（原始计划）和 `{ICODE_OUT_DIR}/02_review.md`（审查意见）
+2. 读取 `{ICODE_OUT_DIR}/01_plan.md`（原始计划）和 `{ICODE_OUT_DIR}/02_review.jsonl`（审查详情）
 3. **深度思考**（必须先执行）：逐条甄别审查意见 → 判断采纳/驳回 → 规划修改策略
 4. 输出步骤确认：`▶ 步骤3 定稿开始`
 
 ### 合并定稿
 
-解析 02_review.md 中的审查意见——从每个 json 代码块提取 JSON，重点关注：
+解析 `02_review.jsonl` 中各轮审查意见，重点关注：
 - 首轮的 `file_review.key_findings`（通读实际代码发现的问题）
 - 所有轮的 `new_issues`（维度审查发现的问题，含 `affected_sections`/`suggestion`/`rejection_risk` 结构化字段）
 
@@ -30,7 +30,7 @@
 6. 保持整体架构不变
 7. 输出前必须自检：章节完整、编号连续、校验项 checkbox 格式正确
 
-**写入定稿**：使用 Write 工具写入 `{ICODE_OUT_DIR}/03_plan_final.md`。
+**写入定稿**：使用当前会话可用的文件写入工具写入 `{ICODE_OUT_DIR}/03_plan_final.md`。
 
 ### 定稿自检
 
