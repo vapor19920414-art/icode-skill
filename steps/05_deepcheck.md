@@ -236,7 +236,7 @@ Free 阶段一次性完整覆盖全部 15 个角度。
 - `deepcheck_total_rounds += 1`
 - **实时落盘**：`status = deepcheck_in_progress`，写入当前 `deepcheck_total_rounds`/`deepcheck_clean_rounds`/`deepcheck_phase` 到 metadata
 - **阶段切换时重置 `deepcheck_clean_rounds = 0`**（每个阶段独立计数）
-- Reverse 阶段：单次执行后始终进入 Fixed，不参与循环
+- Reverse 阶段：单次执行后始终进入 Fixed，重置 `deepcheck_clean_rounds = 0`，不参与循环
 - has_issues → 修复 → `deepcheck_clean_rounds = 0` → 回到**当前阶段**重新执行（重新读代码）。**Free 阶段修复后不重跑**
 - 无 issues → `deepcheck_clean_rounds += 1`
   - Fixed 首次全 clean → 切换 `deepcheck_phase = "free"`，`deepcheck_clean_rounds = 0`
@@ -263,13 +263,13 @@ Free 阶段一次性完整覆盖全部 15 个角度。
     "code_extras": []
   },
   "fixed_results": [
-    {"dimension": "plan_alignment", "status": "clean", "evidence": [""], "issue_ids": []},
-    {"dimension": "logic_closure", "status": "clean", "evidence": [""], "issue_ids": []},
-    {"dimension": "error_handling", "status": "clean", "evidence": [""], "issue_ids": []},
-    {"dimension": "boundary_cases", "status": "clean", "evidence": [""], "issue_ids": []},
-    {"dimension": "style_consistency", "status": "clean", "evidence": [""], "issue_ids": []},
-    {"dimension": "latent_risks", "status": "clean", "evidence": [""], "issue_ids": []},
-    {"dimension": "cross_file_consistency", "status": "clean", "evidence": [""], "issue_ids": []}
+    {"dimension": "plan_alignment", "status": "clean", "evidence": [], "issue_ids": []},
+    {"dimension": "logic_closure", "status": "clean", "evidence": [], "issue_ids": []},
+    {"dimension": "error_handling", "status": "clean", "evidence": [], "issue_ids": []},
+    {"dimension": "boundary_cases", "status": "clean", "evidence": [], "issue_ids": []},
+    {"dimension": "style_consistency", "status": "clean", "evidence": [], "issue_ids": []},
+    {"dimension": "latent_risks", "status": "clean", "evidence": [], "issue_ids": []},
+    {"dimension": "cross_file_consistency", "status": "clean", "evidence": [], "issue_ids": []}
   ],
   "free_results": [],
   "issues": [],

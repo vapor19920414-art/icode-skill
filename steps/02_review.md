@@ -19,8 +19,8 @@
 3. **深度思考**（必须先执行）：需求分解 → 独立方案构思 → 对比要点预判
 4. **分步续跑检测**：
    - 解析命令参数获取 `max_rounds`：若 `/icode review N` 提供了正整数 N，则 `max_rounds = N`；否则 `max_rounds = 3`
-  - 若 `.ico_metadata.json.status == "review_in_progress"`，从 metadata 恢复 `total_rounds` / `clean_rounds` 字段
-    - 同时读取已存在的 `02_review.jsonl` 汇总历史问题
+   - 若 `.ico_metadata.json.status == "review_in_progress"`，从 metadata 恢复 `total_rounds` / `clean_rounds` 字段
+   - 同时读取已存在的 `02_review.jsonl` 汇总历史问题
    - 跳过已完成轮次，从当前 `total_rounds` 继续
    - 续跑时以 metadata 中保存的 `max_rounds` 为准（首次执行时写入 metadata）
    - 输出续跑信息：`▶ 步骤2 续跑，从第{total_rounds}轮开始（已完成{total_rounds-1}轮，最多{max_rounds}轮）`
@@ -234,12 +234,12 @@
     "deeper_risks": []
   },
   "dimension_results": [
-    {"dimension": "logic_reasoning", "status": "clean", "evidence": [""], "issue_ids": []},
-    {"dimension": "flow_completeness", "status": "clean", "evidence": [""], "issue_ids": []},
-    {"dimension": "scenario_coverage", "status": "clean", "evidence": [""], "issue_ids": []},
-    {"dimension": "risk_omission", "status": "clean", "evidence": [""], "issue_ids": []},
-    {"dimension": "implementation_feasibility", "status": "clean", "evidence": [""], "issue_ids": []},
-    {"dimension": "existing_implementation_alignment", "status": "clean", "evidence": [""], "issue_ids": []}
+    {"dimension": "logic_reasoning", "status": "clean", "evidence": [], "issue_ids": []},
+    {"dimension": "flow_completeness", "status": "clean", "evidence": [], "issue_ids": []},
+    {"dimension": "scenario_coverage", "status": "clean", "evidence": [], "issue_ids": []},
+    {"dimension": "risk_omission", "status": "clean", "evidence": [], "issue_ids": []},
+    {"dimension": "implementation_feasibility", "status": "clean", "evidence": [], "issue_ids": []},
+    {"dimension": "existing_implementation_alignment", "status": "clean", "evidence": [], "issue_ids": []}
   ],
   "new_issues": []
 }

@@ -34,7 +34,7 @@
 2. 首轮 `file_review.key_findings` 是步骤3吸收“通读代码约束”的唯一真值源；即使 `file_review.summary` 写得更详细，也不得只凭 summary 采纳或否决
 3. `new_issues` 是步骤3吸收“结构化待处理问题”的唯一 issue 清单；不得从 `summary`、`comparison_analysis`、`dimension_results.evidence` 中自行再发明新的 issue 编号
 4. 对每条 `new_issues[*]`，必须把 `affected_sections`、`suggestion`、`rejection_risk` 三个字段成组读取后再裁决，禁止只看其中一项就采纳/否决
-5. `comparison_analysis` 与 `incremental_scope` 只作为理解轮次上下文和章节联动的辅助证据；如果其中内容未落到 `new_issues` 或首轮 `file_review.key_findings`，不得直接当成独立待处理项
+5. `comparison_analysis` 与 `incremental_scope` 仅用于理解该轮审查的上下文背景，不参与步骤 3 的裁决决策；如果其中内容未落到 `new_issues` 或首轮 `file_review.key_findings`，不得直接当成独立待处理项
 6. 当 `has_new_issues = false` 时，本轮不得从其他字段反推“隐含 issue”；只能把该轮视为无新增问题的背景信息
 
 **要求**：
