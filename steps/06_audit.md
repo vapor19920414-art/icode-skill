@@ -35,6 +35,18 @@
 
 建立追溯矩阵（逐条对照计划功能点/接口/约束，标记代码对应位置）→ 基于矩阵逐维度评分 → 对照校验项逐条勾对 → 汇总问题清单 → 给结论
 
+### `05_deepcheck.jsonl` 固定 schema 消费细则
+
+读取历史复检记录时，必须先逐行校验 schema，再作为历史上下文消费：
+
+1. 每行必须是合法 JSON，且 `schema_version == "icode.deepcheck.v1"`、`step == "deepcheck"`；缺字段、错字段、非法枚举、JSON 损坏时必须立即报错，禁止跳过坏行继续终审
+2. `phase` 只能是 `reverse`、`fixed`、`free`；`fixed_results` 必须严格 7 项固定顺序，`free_results` 在 Free 阶段必须严格覆盖 A1-A15 且顺序固定；`has_issues` 与 `issues` 必须一致
+3. `summary` 仅用于快速定位历史轮次，**不得**替代结构化字段；终审引用历史时必须显式读取 `traceability_matrix`、`files_snapshot`、`reverse_analysis`、`fixed_results`、`free_results`、`issues`、`fixes_applied`
+4. 历史记录按 JSONL 追加顺序消费，并按 phase 分桶：`reverse_analysis` 只取最后一条合法 `reverse` 记录，`fixed_results` 只取最后一条合法 `fixed` 记录，`free_results` 只取最后一条合法 `free` 记录；若某 phase 缺失，只能如实说明缺失，不能脑补
+5. `issues` 只代表“当时那一轮的发现”，不是当前终审结论；终审必须以**重新读取后的最新代码**重新验证。若某个 `issue_id` 在后续 `fixes_applied` 中已出现，则默认视为“已尝试修复”，除非你在最新代码中复现到同一问题，否则不得重复报旧问题
+6. `traceability_matrix` 和 `files_snapshot` 仅作为历史线索，不能替代本步骤“重新读取所有代码文件”的强制要求；历史记录与最新代码冲突时，以最新代码证据为准，并在报告中说明差异
+7. `next_phase` 只用于还原步骤5推进轨迹，不能直接推出“代码已通过终审”之类结论；`has_issues = false` 时，也不得仅凭历史 clean 结果跳过本步骤 6 个审计维度
+
 ### 报告格式
 
 总体评分（百分制）+ 每维度独立评分评语 + 问题汇总清单（含位置、严重程度）+ 结论（通过/有条件通过/不通过）

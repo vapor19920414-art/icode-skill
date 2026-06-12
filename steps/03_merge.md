@@ -17,9 +17,25 @@
 
 ### 合并定稿
 
-解析 `02_review.jsonl` 中各轮审查意见，重点关注：
+解析 `02_review.jsonl` 中各轮审查意见前，先逐行做 schema 校验：
+- 每行必须是合法 JSON，且 `schema_version == "icode.review.v1"`、`step == "review"`
+- 顶层字段必须齐全，不得缺少固定 schema 中的任何字段
+- `round` 必须按追加顺序严格递增；`mode` 必须满足首轮 `full`、后续轮次 `incremental`
+- `dimension_results` 必须严格为 6 项且顺序固定；其中 `issue_ids` 只能引用本行 `new_issues[*].id`
+- `has_new_issues` 与 `new_issues` 必须一致：`true` 时不得为空，`false` 时必须为空数组
+- 任一行缺字段、错字段、枚举值非法、ID 对不上、JSON 损坏，都必须立即报错并停止定稿，禁止猜测补全或跳过坏行
+
+通过校验后，按 `round` 升序消费全部记录，重点关注：
 - 首轮的 `file_review.key_findings`（通读实际代码发现的问题）
 - 所有轮的 `new_issues`（维度审查发现的问题，含 `affected_sections`/`suggestion`/`rejection_risk` 结构化字段）
+
+**固定 schema 消费细则**：
+1. `summary` 仅用于快速浏览，不得替代结构化字段；最终判断必须逐条读取 `file_review.key_findings`、`new_issues`、`comparison_analysis`、`incremental_scope`、`dimension_results`
+2. 首轮 `file_review.key_findings` 是步骤3吸收“通读代码约束”的唯一真值源；即使 `file_review.summary` 写得更详细，也不得只凭 summary 采纳或否决
+3. `new_issues` 是步骤3吸收“结构化待处理问题”的唯一 issue 清单；不得从 `summary`、`comparison_analysis`、`dimension_results.evidence` 中自行再发明新的 issue 编号
+4. 对每条 `new_issues[*]`，必须把 `affected_sections`、`suggestion`、`rejection_risk` 三个字段成组读取后再裁决，禁止只看其中一项就采纳/否决
+5. `comparison_analysis` 与 `incremental_scope` 只作为理解轮次上下文和章节联动的辅助证据；如果其中内容未落到 `new_issues` 或首轮 `file_review.key_findings`，不得直接当成独立待处理项
+6. 当 `has_new_issues = false` 时，本轮不得从其他字段反推“隐含 issue”；只能把该轮视为无新增问题的背景信息
 
 **要求**：
 1. 逐条甄别审查意见（含 `new_issues` 和 `file_review.key_findings`），两者同等重要
