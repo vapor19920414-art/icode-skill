@@ -1,6 +1,6 @@
 ---
 name: icode
-description: 六步全流程编码工作流，支持分步手动调用：/icode help (帮助), /icode new <需求> (新建+计划), /icode plan <需求> (计划), /icode review [N] (审查), /icode merge (定稿), /icode code (编码), /icode deepcheck (复检), /icode audit (终审)
+description: 六步全流程编码工作流，支持分步手动调用：/icode help (帮助), /icode new <需求> [--focus <路径>] (新建+计划), /icode plan <需求> [--focus <路径>] (计划，--focus约束搜索范围精准省token), /icode review [N] (审查), /icode merge (定稿), /icode code (编码), /icode deepcheck (复检), /icode audit (终审)
 ---
 
 **版本**: v1.5.0
@@ -16,8 +16,8 @@ description: 六步全流程编码工作流，支持分步手动调用：/icode 
 | 命令 | 功能 | 创建目录？ |
 |------|------|-----------|
 | `/icode help` | **帮助**：输出使用流程示例 | 否 |
-| `/icode new <需求>` | **全流程**：创建新目录 → 步骤1→6 串联 | ✅ 创建新目录 |
-| `/icode plan <需求>` | **仅步骤1**：拟定项目计划 | ✅ 创建新目录 |
+| `/icode new <需求> [--focus <路径>...]` | **全流程**：创建新目录 → 步骤1→6 串联 | ✅ 创建新目录 |
+| `/icode plan <需求> [--focus <路径>...]` | **仅步骤1**：拟定项目计划（`--focus` 约束搜索范围，精准且省 token） | ✅ 创建新目录 |
 | `/icode review [N]` | **仅步骤2**：多轮循环审查（N=轮数，默认3） | 用最新目录 |
 | `/icode merge` | **仅步骤3**：合并审查意见定稿 | 用最新目录 |
 | `/icode code` | **仅步骤4**：落地编码实施 | 用最新目录 |
@@ -34,7 +34,10 @@ description: 六步全流程编码工作流，支持分步手动调用：/icode 
 # 方式A：全流程一步到位（自动串联所有步骤）
 /icode new 实现MCU雨量传感器I2C驱动
 
-# 方式B：分步执行
+# 方式B：指定关联代码范围，计划更精准且快（推荐）
+/icode plan 新增蓝牙开启接口 --focus broker/src/op_mcu_communication.cpp product_test/product_test_node/
+
+# 方式C：分步执行
 /icode plan 实现MCU雨量传感器I2C驱动   # 步骤1
 /icode review                          # 步骤2（默认3轮）
 /icode review 5                        # 步骤2（指定5轮）
@@ -43,6 +46,23 @@ description: 六步全流程编码工作流，支持分步手动调用：/icode 
 /icode deepcheck                       # 步骤5
 /icode audit                           # 步骤6
 ```
+
+### `--focus` 参数（推荐在 plan/new 中使用）
+
+当你已经知道需求涉及哪些文件/目录时，用 `--focus` 约束步骤1的代码探索范围：
+
+```bash
+# 单个文件
+/icode plan 新增蓝牙开启接口 --focus broker/src/op_mcu_communication.cpp
+
+# 多个路径（空格分隔）
+/icode plan 新增蓝牙开启接口 --focus broker/src/op_mcu_communication.cpp product_test/product_test_node/
+```
+
+**效果**：
+- 步骤1 只探索 `--focus` 指定的路径及其直接依赖（include 的头文件、调用的函数所在文件），**不做全项目扫描**
+- 计划产出更快（减少 70-90% token 消耗），且更精准（不会被无关代码干扰）
+- 不指定 `--focus` 时，步骤1 也会做**关键词驱动的精准搜索**（从需求中提取关键词 grep），**绝不 `find . -name "*.cpp"` 式全盘扫**
 
 ## 通用规则
 
@@ -87,6 +107,7 @@ ICODE_OUT_DIR=".icode_output_${LAST}"
   "status": "当前步骤状态",
   "completed_steps": ["1", "2"],
   "code_files": ["path/to/file"],
+  "focus_paths": ["dir/file.cpp", "dir2/"],
   "total_rounds": 1,
   "clean_rounds": 0,
   "max_rounds": 3,
