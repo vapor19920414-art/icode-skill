@@ -33,6 +33,9 @@ git clone <repo-url> ~/.claude/skills/icode
 # 一步走得全流程
 /icode new 实现MCU雨量传感器I2C驱动
 
+# 推荐：需求文件模式（类似 add file to chat）
+/icode plan @.icode_reqs/bluetooth_open.md
+
 # 或者分步执行
 /icode plan 实现MCU雨量传感器I2C驱动   # 步骤1：拟定计划
 /icode review                          # 步骤2：专项审查（默认3轮）
@@ -48,8 +51,25 @@ git clone <repo-url> ~/.claude/skills/icode
 | 命令 | 功能 | 创建目录 |
 |------|------|----------|
 | `/icode help` | 帮助：输出使用流程示例 | 否 |
-| `/icode new <需求>` | 全流程：创建目录 → 步骤1→6 | ✅ |
-| `/icode plan <需求>` | 仅步骤1：拟定项目计划 | ✅ |
+| `/icode new <需求\|@需求文件>` | 全流程：创建目录 → 步骤1→6 | ✅ |
+| `/icode plan <需求\|@需求文件>` | 仅步骤1：拟定项目计划 | ✅ |
+
+## 需求文件模式（推荐）
+
+如果需求信息较长，或你希望带上关联文件、验收标准等上下文，建议在项目根目录维护 `.icode_reqs/`：
+
+```bash
+mkdir -p .icode_reqs
+cp requirements/REQ_TEMPLATE.md .icode_reqs/bluetooth_open.md
+
+# 编辑需求文件后执行
+/icode plan @.icode_reqs/bluetooth_open.md
+```
+
+探索范围优先级：
+- 显式 `--focus` 最高优先级
+- 未传 `--focus` 且需求文件含“关联文件/Focus Paths”时，按需求文件路径做精准探索
+- 两者都没有时，才回退关键词驱动搜索（仍禁止全项目扫描）
 | `/icode review [N]` | 仅步骤2：专项审查计划（N=轮数，默认3） | 否 |
 | `/icode merge` | 仅步骤3：合并审查意见定稿 | 否 |
 | `/icode code` | 仅步骤4：落地编码实施 | 否 |
@@ -119,7 +139,7 @@ cat .icode_output_N/.ico_metadata.json
 
 ## 版本
 
-当前版本：v1.5.0
+当前版本：v1.6.0
 
 详细说明请见 [SKILL.md](SKILL.md)。
 

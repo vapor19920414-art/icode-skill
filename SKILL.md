@@ -1,9 +1,9 @@
 ---
 name: icode
-description: 六步全流程编码工作流，支持分步手动调用：/icode help (帮助), /icode new <需求> [--focus <路径>] (新建+计划), /icode plan <需求> [--focus <路径>] (计划，--focus约束搜索范围精准省token), /icode review [N] (审查), /icode merge (定稿), /icode code (编码), /icode deepcheck (复检), /icode audit (终审)
+description: 六步全流程编码工作流，支持分步手动调用：/icode help (帮助), /icode new <需求|@需求文件> [--focus <路径>] (新建+计划), /icode plan <需求|@需求文件> [--focus <路径>] (计划，--focus约束搜索范围精准省token), /icode review [N] (审查), /icode merge (定稿), /icode code (编码), /icode deepcheck (复检), /icode audit (终审)
 ---
 
-**版本**: v1.5.0
+**版本**: v1.6.0
 
 # ICode 六步全流程编码工作流
 
@@ -16,8 +16,8 @@ description: 六步全流程编码工作流，支持分步手动调用：/icode 
 | 命令 | 功能 | 创建目录？ |
 |------|------|-----------|
 | `/icode help` | **帮助**：输出使用流程示例 | 否 |
-| `/icode new <需求> [--focus <路径>...]` | **全流程**：创建新目录 → 步骤1→6 串联 | ✅ 创建新目录 |
-| `/icode plan <需求> [--focus <路径>...]` | **仅步骤1**：拟定项目计划（`--focus` 约束搜索范围，精准且省 token） | ✅ 创建新目录 |
+| `/icode new <需求\|@需求文件> [--focus <路径>...]` | **全流程**：创建新目录 → 步骤1→6 串联 | ✅ 创建新目录 |
+| `/icode plan <需求\|@需求文件> [--focus <路径>...]` | **仅步骤1**：拟定项目计划（`--focus` 约束搜索范围，精准且省 token） | ✅ 创建新目录 |
 | `/icode review [N]` | **仅步骤2**：多轮循环审查（N=轮数，默认3） | 用最新目录 |
 | `/icode merge` | **仅步骤3**：合并审查意见定稿 | 用最新目录 |
 | `/icode code` | **仅步骤4**：落地编码实施 | 用最新目录 |
@@ -37,7 +37,10 @@ description: 六步全流程编码工作流，支持分步手动调用：/icode 
 # 方式B：指定关联代码范围，计划更精准且快（推荐）
 /icode plan 新增蓝牙开启接口 --focus broker/src/op_mcu_communication.cpp product_test/product_test_node/
 
-# 方式C：分步执行
+# 方式C：需求文件模式（推荐，类似 add file to chat）
+/icode plan @.icode_reqs/bluetooth_open.md
+
+# 方式D：分步执行
 /icode plan 实现MCU雨量传感器I2C驱动   # 步骤1
 /icode review                          # 步骤2（默认3轮）
 /icode review 5                        # 步骤2（指定5轮）
@@ -63,6 +66,51 @@ description: 六步全流程编码工作流，支持分步手动调用：/icode 
 - 步骤1 只探索 `--focus` 指定的路径及其直接依赖（include 的头文件、调用的函数所在文件），**不做全项目扫描**
 - 计划产出更快（减少 70-90% token 消耗），且更精准（不会被无关代码干扰）
 - 不指定 `--focus` 时，步骤1 也会做**关键词驱动的精准搜索**（从需求中提取关键词 grep），**绝不 `find . -name "*.cpp"` 式全盘扫**
+
+#### 需求文件 + `--focus` 组合（人工强控范围）
+
+当需求文件内容复杂、涉及的代码路径较多，但你已经明确知道**只需要关注哪几个文件/目录**时，将两者组合使用，强制限定探索范围：
+
+```bash
+# 需求文件写详细背景和验收标准，--focus 强制只探索这两个路径
+/icode plan @.icode_reqs/bluetooth_open.md --focus broker/src/op_mcu_communication.cpp product_test/product_test_node/
+```
+
+**适用场景**：
+- 需求文件写了完整的需求背景/功能点/验收标准，但实际代码改动只涉及 1-2 个模块
+- 需求评审阶段已经锁定了改动范围，不想让 AI 发散到无关文件
+- 需求文件是团队模板（包含大量背景描述），但实施范围非常明确
+
+**优先级规则**（三者取最高优先级生效）：
+1. 显式 `--focus` — 最高优先级，直接锁死探索范围
+2. 需求文件中的关联文件/Focus Paths 字段
+3. 关键词驱动搜索 — 兜底，从需求文本中自动提取关键词 grep
+
+### 需求文件模式（推荐）
+
+当需求不是一句话，而是希望像 Copilot 的 add file to chat 一样带上下文输入时，使用 `@需求文件`：
+
+```bash
+# 在项目根目录创建需求目录
+mkdir -p .icode_reqs
+
+# 直接引用需求文件
+/icode plan @.icode_reqs/bluetooth_open.md
+
+# 也可以全流程
+/icode new @.icode_reqs/bluetooth_open.md
+```
+
+需求文件建议包含：
+- 需求背景/目标
+- 功能点与非功能约束
+- 关联文件（可选，作为 `--focus` 的默认来源）
+- 验收标准
+
+优先级规则：
+- 显式 `--focus` 最高优先级
+- 未显式传 `--focus` 时，若需求文件含“关联文件/Focus Paths”，步骤1直接按这些路径做精准探索
+- 两者都没有时，才退回关键词驱动搜索
 
 ## 通用规则
 
@@ -103,6 +151,7 @@ ICODE_OUT_DIR=".icode_output_${LAST}"
 ```json
 {
   "requirement": "需求描述",
+  "requirement_source": "inline|file",
   "created_at": "创建时间",
   "status": "当前步骤状态",
   "completed_steps": ["1", "2"],

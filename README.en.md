@@ -32,6 +32,9 @@ git clone <repo-url> ~/.claude/skills/icode
 # One-shot full flow
 /icode new Implement MCU rain sensor I2C driver
 
+# Recommended: requirement file mode (similar to add file to chat)
+/icode plan @.icode_reqs/bluetooth_open.md
+
 # Or step by step
 /icode plan Implement MCU rain sensor I2C driver   # Step 1: Draft plan
 /icode review                                       # Step 2: Review plan (default 3 rounds)
@@ -47,8 +50,25 @@ git clone <repo-url> ~/.claude/skills/icode
 | Command | Description | Creates Dir? |
 | --- | --- | --- |
 | `/icode help` | Help: show usage examples | No |
-| `/icode new <req>` | Full flow: create dir → steps 1–6 | Yes |
-| `/icode plan <req>` | Step 1 only: draft project plan | Yes |
+| `/icode new <req\|@req-file>` | Full flow: create dir → steps 1–6 | Yes |
+| `/icode plan <req\|@req-file>` | Step 1 only: draft project plan | Yes |
+
+## Requirement File Mode (Recommended)
+
+If your requirement is longer than a single sentence, or you want to include related files and acceptance criteria, keep requirement docs under `.icode_reqs/` in your project root:
+
+```bash
+mkdir -p .icode_reqs
+cp requirements/REQ_TEMPLATE.md .icode_reqs/bluetooth_open.md
+
+# Run with requirement file input
+/icode plan @.icode_reqs/bluetooth_open.md
+```
+
+Exploration priority:
+- Explicit `--focus` has the highest priority
+- If `--focus` is not provided and the requirement file has Related Files / Focus Paths, use those paths for precise exploration
+- Fall back to keyword-driven search only when neither is provided (still no full-project scan)
 | `/icode review [N]` | Step 2 only: review the plan (N=rounds, default 3) | No |
 | `/icode merge` | Step 3 only: merge reviews & finalize | No |
 | `/icode code` | Step 4 only: implement code | No |
@@ -81,7 +101,7 @@ All 6 steps run in the main session with the current model. No automatic model s
 
 ## Version
 
-Current version: v1.5.0
+Current version: v1.6.0
 
 For detailed step descriptions, see [SKILL.md](SKILL.md).
 
